@@ -1,1 +1,53 @@
+name: build-release
 
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pip pyinstaller
+
+      - name: Build
+        run: pyinstaller --onefile --name scaffold scaffold.py
+
+      - name: Package
+        shell: bash
+        run: |
+          set -e
+          OS="${{ matrix.os }}"
+          OUT="package-${OS}"
+          mkdir -p "$OUT/examples"
+          if [[ "$OS" == windows-latest ]]; then
+            cp dist/scaffold.exe "$OUT/"
+          else
+            cp dist/scaffold "$OUT/"
+            chmod +x "$OUT/scaffold"
+          fi
+          cp README.md "$OUT/"
+          cp -r examples/* "$OUT/examples/"
+          if command -v zip >/dev/null 2>&1; then
+            zip -r "${OUT}.zip" "$OUT"
+          else
+            python -c "import shutil; shutil.make_archive('${OUT}', 'zip', '${OUT}')"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scaffold-${{ matrix.os }}
+          path: package-*.zip
