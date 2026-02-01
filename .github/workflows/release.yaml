@@ -1,7 +1,6 @@
 name: build-release
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - "v*"
@@ -9,6 +8,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
@@ -46,6 +46,7 @@ jobs:
             zip -r "${OUT}.zip" "$OUT"
           else
             python -c "import shutil; shutil.make_archive('${OUT}', 'zip', '${OUT}')"
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
