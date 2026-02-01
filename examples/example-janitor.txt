@@ -1,0 +1,8 @@
+project/
+  main.py
+  README.md
+  examples/
+    example.txt
+  .github/
+    workflows/
+      release.yml
